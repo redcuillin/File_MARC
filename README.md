@@ -1,3 +1,10 @@
+# Fork of Pear/File_MARC
+Created in attempt to update this code and keep in usable in PHP8.4.
+
+Initial objective is to replace the large number of deprecation warnings likely to be thrown.
+
+## Upstream readme:
+
 This package is http://pear.php.net/package/File_MARC and has been migrated from https://svn.php.net/repository/pear/packages/File_MARC
 
 Please report all new issues via the PEAR bug tracker.
