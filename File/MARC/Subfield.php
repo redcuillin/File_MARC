@@ -173,7 +173,7 @@ class File_MARC_Subfield
      */
     function toRaw()
     {
-        $result = File_MARC::SUBFIELD_INDICATOR.$this->code.$this->data;
+        $result = File_MARC::SUBFIELD_INDICATOR . $this->code . $this->data;
         return (string)$result;
     }
     // }}}
@@ -237,7 +237,7 @@ class File_MARC_Subfield
     function isEmpty()
     {
         // There is data
-        if (strlen($this->data)) {
+        if (strlen((string) $this->data)) {
             return false;
         }
 
@@ -247,4 +247,3 @@ class File_MARC_Subfield
     // }}}
 }
 // }}}
-

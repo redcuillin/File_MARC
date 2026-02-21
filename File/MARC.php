@@ -109,9 +109,9 @@ class File_MARC extends File_MARCBASE
 
     // {{{ properties
     /**
-     * Source containing raw records
-     * 
-     * @var resource
+     * Source containing raw records (resource for SOURCE_FILE, array for SOURCE_STRING)
+     *
+     * @var resource|array
      */
     protected $source;
 
@@ -158,22 +158,22 @@ class File_MARC extends File_MARCBASE
 
         switch ($type) {
 
-        case self::SOURCE_FILE:
-            $this->type = self::SOURCE_FILE;
-            $this->source = fopen($source, 'rb');
-            if (!$this->source) {
-                 $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_FILE], array('filename' => $source));
-                 throw new File_MARC_Exception($errorMessage, File_MARC_Exception::ERROR_INVALID_FILE);
-            }
-            break;
+            case self::SOURCE_FILE:
+                $this->type = self::SOURCE_FILE;
+                $this->source = fopen($source, 'rb');
+                if (!$this->source) {
+                    $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_FILE], array('filename' => $source));
+                    throw new File_MARC_Exception($errorMessage, File_MARC_Exception::ERROR_INVALID_FILE);
+                }
+                break;
 
-        case self::SOURCE_STRING:
-            $this->type = self::SOURCE_STRING;
-            $this->source = explode(File_MARC::END_OF_RECORD, $source);
-            break;
+            case self::SOURCE_STRING:
+                $this->type = self::SOURCE_STRING;
+                $this->source = explode(File_MARC::END_OF_RECORD, (string) $source);
+                break;
 
-        default:
-            throw new File_MARC_Exception(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_SOURCE], File_MARC_Exception::ERROR_INVALID_SOURCE);
+            default:
+                throw new File_MARC_Exception(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_SOURCE], File_MARC_Exception::ERROR_INVALID_SOURCE);
         }
     }
     // }}}
@@ -194,7 +194,6 @@ class File_MARC extends File_MARCBASE
 
             // Remove illegal stuff that sometimes occurs between records
             $record = preg_replace('/^[\\x0a\\x0d\\x00]+/', "", $record);
-
         } elseif ($this->type == self::SOURCE_STRING) {
             $record = array_shift($this->source);
         }
@@ -275,7 +274,7 @@ class File_MARC extends File_MARCBASE
         }
 
         if (substr($text, -1, 1) != File_MARC::END_OF_RECORD)
-             throw new File_MARC_Exception(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_TERMINATOR], File_MARC_Exception::ERROR_INVALID_TERMINATOR);
+            throw new File_MARC_Exception(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_TERMINATOR], File_MARC_Exception::ERROR_INVALID_TERMINATOR);
 
         // Store leader
         $marc->setLeader(substr($text, 0, File_MARC::LEADER_LEN));
@@ -287,7 +286,7 @@ class File_MARC extends File_MARCBASE
         $dir = substr($text, File_MARC::LEADER_LEN, $data_start - File_MARC::LEADER_LEN - 1);  // -1 to allow for \x1e at end of directory
 
         // character after the directory must be \x1e
-        if (substr($text, $data_start-1, 1) != File_MARC::END_OF_FIELD) {
+        if (substr($text, $data_start - 1, 1) != File_MARC::END_OF_FIELD) {
             $marc->addWarning(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_NO_DIRECTORY]);
         }
 
@@ -298,9 +297,9 @@ class File_MARC extends File_MARCBASE
 
         // go through all the fields
         $nfields = strlen($dir) / File_MARC::DIRECTORY_ENTRY_LEN;
-        for ($n=0; $n<$nfields; $n++) {
+        for ($n = 0; $n < $nfields; $n++) {
             // As pack returns to key 1, leave place 0 in list empty
-            $binaryString = substr($dir, $n*File_MARC::DIRECTORY_ENTRY_LEN, File_MARC::DIRECTORY_ENTRY_LEN);
+            $binaryString = substr($dir, $n * File_MARC::DIRECTORY_ENTRY_LEN, File_MARC::DIRECTORY_ENTRY_LEN);
 
             $tag = null;
             $len = null;
@@ -320,13 +319,13 @@ class File_MARC extends File_MARCBASE
             }
 
             // Check directory validity
-            if (!preg_match("/^[0-9A-Za-z]{3}$/", $tag)) {
+            if (!preg_match("/^[0-9A-Za-z]{3}$/", (string) $tag)) {
                 $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_DIRECTORY_TAG], array("tag" => $tag)));
             }
-            if (!preg_match("/^\d{4}$/", $len)) {
+            if (!preg_match("/^\d{4}$/", (string) $len)) {
                 $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_DIRECTORY_TAG_LENGTH], array("tag" => $tag, "len" => $len)));
             }
-            if (!preg_match("/^\d{5}$/", $offset)) {
+            if (!preg_match("/^\d{5}$/", (string) $offset)) {
                 $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_DIRECTORY_OFFSET], array("tag" => $tag, "offset" => $offset)));
             }
             if ($offset + $len > $record_length) {
@@ -343,7 +342,7 @@ class File_MARC extends File_MARCBASE
                 $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_FIELD_EOF], array("tag" => $tag)));
             }
 
-            if (preg_match("/^\d+$/", $tag) and ($tag < 10)) {
+            if (preg_match("/^\d+$/", (string) $tag) and ($tag < 10)) {
                 $marc->appendField(new File_MARC_Control_Field($tag, $tag_data));
             } else {
                 $subfields = explode(File_MARC::SUBFIELD_INDICATOR, $tag_data);
@@ -357,7 +356,7 @@ class File_MARC extends File_MARCBASE
                         $ind1 = $indicators;
                         $ind2 = " ";
                     } else {
-                        list($ind1,$ind2) = array(" ", " ");
+                        list($ind1, $ind2) = array(" ", " ");
                     }
                 } else {
                     $ind1 = substr($indicators, 0, 1);
@@ -370,14 +369,14 @@ class File_MARC extends File_MARCBASE
                     if (strlen($subfield) > 0) {
                         $subfield_data[] = new File_MARC_Subfield(substr($subfield, 0, 1), substr($subfield, 1));
                     } else {
-                         $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_EMPTY_SUBFIELD], array("tag" => $tag));
-                         $marc->addWarning($errorMessage);
+                        $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_EMPTY_SUBFIELD], array("tag" => $tag));
+                        $marc->addWarning($errorMessage);
                     }
                 }
 
                 if (!isset($subfield_data)) {
-                     $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_EMPTY_SUBFIELD], array("tag" => $tag));
-                     $marc->addWarning($errorMessage);
+                    $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_EMPTY_SUBFIELD], array("tag" => $tag));
+                    $marc->addWarning($errorMessage);
                 }
 
 
@@ -397,4 +396,3 @@ class File_MARC extends File_MARCBASE
 
 }
 // }}}
-

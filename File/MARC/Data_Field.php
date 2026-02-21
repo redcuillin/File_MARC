@@ -98,7 +98,7 @@ class File_MARC_Data_Field extends File_MARC_Field
      * @param string $ind1      first indicator
      * @param string $ind2      second indicator
      */
-    function __construct($tag, array $subfields = null, $ind1 = null, $ind2 = null)
+    function __construct($tag, ?array $subfields = null, $ind1 = null, $ind2 = null)
     {
         $this->subfields = new File_MARC_List();
 
@@ -286,8 +286,8 @@ class File_MARC_Data_Field extends File_MARC_Field
         } elseif ($ind == 2) {
             return (string)$this->ind2;
         } else {
-             $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_INDICATOR_REQUEST], array("indicator" => $indicator));
-             throw new File_MARC_Exception($errorMessage, File_MARC_Exception::ERROR_INVALID_INDICATOR_REQUEST);
+            $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_INDICATOR_REQUEST], array("indicator" => $ind));
+            throw new File_MARC_Exception($errorMessage, File_MARC_Exception::ERROR_INVALID_INDICATOR_REQUEST);
         }
         return false;
     }
@@ -306,18 +306,18 @@ class File_MARC_Data_Field extends File_MARC_Field
     {
         switch ($ind) {
 
-        case 1:
-            $this->ind1 = $this->_validateIndicator($value);
-            break;
+            case 1:
+                $this->ind1 = $this->_validateIndicator($value);
+                break;
 
-        case 2:
-            $this->ind2 = $this->_validateIndicator($value);
-            break;
+            case 2:
+                $this->ind2 = $this->_validateIndicator($value);
+                break;
 
-        default:
-            $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_INDICATOR_REQUEST], array("indicator" => $ind));
-            throw new File_MARC_Exception($errorMessage, File_MARC_Exception::ERROR_INVALID_INDICATOR_REQUEST);
-            return false;
+            default:
+                $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_INDICATOR_REQUEST], array("indicator" => $ind));
+                throw new File_MARC_Exception($errorMessage, File_MARC_Exception::ERROR_INVALID_INDICATOR_REQUEST);
+                return false;
         }
 
         return $this->getIndicator($ind);
@@ -340,9 +340,9 @@ class File_MARC_Data_Field extends File_MARC_Field
         // iterate merrily through the subfields looking for the requested code
         foreach ($this->subfields as $sf) {
             if (($pcre
-                && preg_match("/$code/", $sf->getCode()))
+                    && preg_match("/$code/", $sf->getCode()))
                 || (!$pcre
-                && $code == $sf->getCode())
+                    && $code == $sf->getCode())
             ) {
                 return $sf;
             }
@@ -380,9 +380,9 @@ class File_MARC_Data_Field extends File_MARC_Field
         // iterate merrily through the subfields looking for the requested code
         foreach ($this->subfields as $sf) {
             if (($pcre
-                && preg_match("/$code/", $sf->getCode()))
+                    && preg_match("/$code/", $sf->getCode()))
                 || (!$pcre
-                && $code == $sf->getCode())
+                    && $code == $sf->getCode())
             ) {
                 $results[] = $sf;
             }
@@ -464,7 +464,7 @@ class File_MARC_Data_Field extends File_MARC_Field
                 $subfields[] = $subfield->toRaw();
             }
         }
-        return (string)$this->ind1.$this->ind2.implode("", $subfields).File_MARC::END_OF_FIELD;
+        return (string)$this->ind1 . $this->ind2 . implode("", $subfields) . File_MARC::END_OF_FIELD;
     }
     // }}}
 
@@ -482,7 +482,7 @@ class File_MARC_Data_Field extends File_MARC_Field
     function getContents($joinChar = '')
     {
         $contents = array();
-        foreach($this->subfields as $subfield) {
+        foreach ($this->subfields as $subfield) {
             $contents[] = $subfield->getData();
         }
         return implode($joinChar, $contents);
@@ -490,4 +490,3 @@ class File_MARC_Data_Field extends File_MARC_Field
     // }}}
 }
 // }}}
-

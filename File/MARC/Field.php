@@ -75,16 +75,15 @@ class File_MARC_Field extends File_MARC_List
      * @param string $ind1      placeholder for first indicator
      * @param string $ind2      placeholder for second indicator
      */
-    function __construct($tag, $subfields = null, $ind1 = null, $ind2 = null) 
+    function __construct($tag, $subfields = null, $ind1 = null, $ind2 = null)
     {
         $this->tag = $tag;
 
         // Check if valid tag
-        if (!preg_match("/^[0-9A-Za-z]{3}$/", $tag)) {
-             $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_TAG], array("tag" => $tag));
-             throw new File_MARC_Exception($errorMessage, File_MARC_Exception::ERROR_INVALID_TAG);
+        if (!preg_match("/^[0-9A-Za-z]{3}$/", (string) $tag)) {
+            $errorMessage = File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_TAG], array("tag" => $tag));
+            throw new File_MARC_Exception($errorMessage, File_MARC_Exception::ERROR_INVALID_TAG);
         }
-
     }
     // }}}
 
@@ -227,7 +226,7 @@ class File_MARC_Field extends File_MARC_List
         } else {
             $out = '';
             foreach ($this->getSubfields() as $subfield) {
-                if (substr($this->getTag(), 0, 1) == '6' and (in_array($subfield->getCode(), array('v','x','y','z')))) {
+                if (substr($this->getTag(), 0, 1) == '6' and (in_array($subfield->getCode(), array('v', 'x', 'y', 'z')))) {
                     $out .= ' -- ' . $subfield->getData();
                 } elseif (!in_array($subfield->getCode(), $exclude)) {
                     $out .= ' ' . $subfield->getData();
@@ -239,4 +238,3 @@ class File_MARC_Field extends File_MARC_List
     // }}}
 }
 // }}}
-

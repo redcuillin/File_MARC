@@ -91,16 +91,18 @@ class File_MARC_List extends SplDoublyLinkedList
      * This method enables you to use a foreach iterator to retrieve
      * the tag or code as the key for the iterator.
      *
-     * @return int returns the tag or code
+     * @return int|string returns the tag or code
      */
-    function key(): int
+    #[\ReturnTypeWillChange]
+    function key()
     {
         if ($this->current() instanceof File_MARC_Field) {
             return $this->current()->getTag();
-        } elseif ($this->current() instanceof File_MARC_Subfield) {
+        }
+        if ($this->current() instanceof File_MARC_Subfield) {
             return $this->current()->getCode();
         }
-        return false;
+        return parent::key();
     }
     // }}}
 
@@ -124,19 +126,19 @@ class File_MARC_List extends SplDoublyLinkedList
         // Now add the node according to the requested mode
         switch ($before) {
 
-        case true:
-            $this->add($exist_pos, $new_node);
-            break;
+            case true:
+                $this->add($exist_pos, $new_node);
+                break;
 
-        // after
-        case false:
-            if ($this->offsetExists($exist_pos + 1)) {
-                $this->add($exist_pos + 1, $new_node);
-            } else {
-                $this->appendNode($new_node);
-                return true;
-            }
-            break;
+            // after
+            case false:
+                if ($this->offsetExists($exist_pos + 1)) {
+                    $this->add($exist_pos + 1, $new_node);
+                } else {
+                    $this->appendNode($new_node);
+                    return true;
+                }
+                break;
         }
 
         // Fix positions
@@ -212,11 +214,9 @@ class File_MARC_List extends SplDoublyLinkedList
                     $this->next();
                 }
             }
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             // no-op - shift() throws an exception, sigh
         }
-
     }
     // }}}
 
@@ -248,4 +248,3 @@ class File_MARC_List extends SplDoublyLinkedList
 
 }
 // }}}
-

@@ -124,6 +124,19 @@ class File_MARC_Record
     }
     // }}}
 
+    // {{{ _toUtf8()
+    /**
+     * Encode string from ISO-8859-1 to UTF-8 (replacement for deprecated utf8_encode)
+     *
+     * @param string $str string in ISO-8859-1
+     * @return string string in UTF-8
+     */
+    private function _toUtf8(string $str): string
+    {
+        return mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
+    }
+    // }}}
+
     // {{{ getLeader()
     /**
      * Get MARC leader
@@ -269,15 +282,15 @@ class File_MARC_Record
          */
         $base_address
             = File_MARC::LEADER_LEN +    // better be 24
-                (count($directory) * File_MARC::DIRECTORY_ENTRY_LEN) +
-                                // all the directory entries
-                1;              // end-of-field marker
+            (count($directory) * File_MARC::DIRECTORY_ENTRY_LEN) +
+            // all the directory entries
+            1;              // end-of-field marker
 
 
         $total
             = $base_address +  // stuff before first field
-                $data_end +      // Length of the fields
-                1;              // End-of-record marker
+            $data_end +      // Length of the fields
+            1;              // End-of-record marker
 
 
         return array($fields, $directory, $total, $base_address);
@@ -335,9 +348,9 @@ class File_MARC_Record
     {
         foreach ($this->fields as $field) {
             if (($pcre
-                && preg_match("/$spec/", $field->getTag()))
+                    && preg_match("/$spec/", $field->getTag()))
                 || (!$pcre
-                && $spec == $field->getTag())
+                    && $spec == $field->getTag())
             ) {
                 return $field;
             }
@@ -392,9 +405,9 @@ class File_MARC_Record
         $cnt = 0;
         foreach ($this->getFields() as $field) {
             if (($pcre
-                && preg_match("/$tag/", $field->getTag()))
+                    && preg_match("/$tag/", $field->getTag()))
                 || (!$pcre
-                && $tag == $field->getTag())
+                    && $tag == $field->getTag())
             ) {
                 $field->delete();
                 $cnt++;
@@ -465,7 +478,7 @@ class File_MARC_Record
         /**
          * Glue together all parts
          */
-        return $this->getLeader().implode("", $directory).File_MARC::END_OF_FIELD.implode("", $fields).File_MARC::END_OF_RECORD;
+        return $this->getLeader() . implode("", $directory) . File_MARC::END_OF_FIELD . implode("", $fields) . File_MARC::END_OF_RECORD;
     }
     // }}}
 
@@ -508,28 +521,28 @@ class File_MARC_Record
     function toJSON()
     {
         $json = new StdClass();
-        $json->leader = utf8_encode($this->getLeader());
+        $json->leader = $this->_toUtf8($this->getLeader());
 
         /* Start fields */
         $fields = array();
         foreach ($this->fields as $field) {
             if (!$field->isEmpty()) {
-                switch(get_class($field)) {
-                case "File_MARC_Control_Field":
-                    $fields[] = array(utf8_encode($field->getTag()) => utf8_encode($field->getData()));
-                    break;
+                switch (get_class($field)) {
+                    case "File_MARC_Control_Field":
+                        $fields[] = array($this->_toUtf8($field->getTag()) => $this->_toUtf8($field->getData()));
+                        break;
 
-                case "File_MARC_Data_Field":
-                    $subs = array();
-                    foreach ($field->getSubfields() as $sf) {
-                        $subs[] = array(utf8_encode($sf->getCode()) => utf8_encode($sf->getData()));
-                    }
-                    $contents = new StdClass();
-                    $contents->ind1 = utf8_encode($field->getIndicator(1));
-                    $contents->ind2 = utf8_encode($field->getIndicator(2));
-                    $contents->subfields = $subs;
-                    $fields[] = array(utf8_encode($field->getTag()) => $contents);
-                    break;
+                    case "File_MARC_Data_Field":
+                        $subs = array();
+                        foreach ($field->getSubfields() as $sf) {
+                            $subs[] = array($this->_toUtf8($sf->getCode()) => $this->_toUtf8($sf->getData()));
+                        }
+                        $contents = new StdClass();
+                        $contents->ind1 = $this->_toUtf8($field->getIndicator(1));
+                        $contents->ind2 = $this->_toUtf8($field->getIndicator(2));
+                        $contents->subfields = $subs;
+                        $fields[] = array($this->_toUtf8($field->getTag()) => $contents);
+                        break;
                 }
             }
         }
@@ -561,30 +574,30 @@ class File_MARC_Record
         $json = new StdClass();
         $json->type = "marc-hash";
         $json->version = array(1, 0);
-        $json->leader = utf8_encode($this->getLeader());
+        $json->leader = $this->_toUtf8($this->getLeader());
 
         /* Start fields */
         $fields = array();
         foreach ($this->fields as $field) {
             if (!$field->isEmpty()) {
-                switch(get_class($field)) {
-                case "File_MARC_Control_Field":
-                    $fields[] = array(utf8_encode($field->getTag()), utf8_encode($field->getData()));
-                    break;
+                switch (get_class($field)) {
+                    case "File_MARC_Control_Field":
+                        $fields[] = array($this->_toUtf8($field->getTag()), $this->_toUtf8($field->getData()));
+                        break;
 
-                case "File_MARC_Data_Field":
-                    $subs = array();
-                    foreach ($field->getSubfields() as $sf) {
-                        $subs[] = array(utf8_encode($sf->getCode()), utf8_encode($sf->getData()));
-                    }
-                    $contents = array(
-                        utf8_encode($field->getTag()),
-                        utf8_encode($field->getIndicator(1)),
-                        utf8_encode($field->getIndicator(2)),
-                        $subs
-                    );
-                    $fields[] = $contents;
-                    break;
+                    case "File_MARC_Data_Field":
+                        $subs = array();
+                        foreach ($field->getSubfields() as $sf) {
+                            $subs[] = array($this->_toUtf8($sf->getCode()), $this->_toUtf8($sf->getData()));
+                        }
+                        $contents = array(
+                            $this->_toUtf8($field->getTag()),
+                            $this->_toUtf8($field->getIndicator(1)),
+                            $this->_toUtf8($field->getIndicator(2)),
+                            $subs
+                        );
+                        $fields[] = $contents;
+                        break;
                 }
             }
         }
@@ -624,7 +637,7 @@ class File_MARC_Record
             $this->marcxml->startElement("record");
             $this->marcxml->writeAttribute("xmlns", "http://www.loc.gov/MARC21/slim");
         }
-        
+
 
         // MARCXML schema has some strict requirements
         // We'll set reasonable defaults to avoid invalid MARCXML
@@ -646,27 +659,27 @@ class File_MARC_Record
 
         foreach ($this->fields as $field) {
             if (!$field->isEmpty()) {
-                switch(get_class($field)) {
-                case "File_MARC_Control_Field":
-                    $this->marcxml->startElement("controlfield");
-                    $this->marcxml->writeAttribute("tag", $field->getTag());
-                    $this->marcxml->text($field->getData());
-                    $this->marcxml->endElement(); // end control field
-                    break;
+                switch (get_class($field)) {
+                    case "File_MARC_Control_Field":
+                        $this->marcxml->startElement("controlfield");
+                        $this->marcxml->writeAttribute("tag", $field->getTag());
+                        $this->marcxml->text($field->getData());
+                        $this->marcxml->endElement(); // end control field
+                        break;
 
-                case "File_MARC_Data_Field":
-                    $this->marcxml->startElement("datafield");
-                    $this->marcxml->writeAttribute("tag", $field->getTag());
-                    $this->marcxml->writeAttribute("ind1", $field->getIndicator(1));
-                    $this->marcxml->writeAttribute("ind2", $field->getIndicator(2));
-                    foreach ($field->getSubfields() as $subfield) {
-                        $this->marcxml->startElement("subfield");
-                        $this->marcxml->writeAttribute("code", $subfield->getCode());
-                        $this->marcxml->text($subfield->getData());
-                        $this->marcxml->endElement(); // end subfield
-                    }
-                    $this->marcxml->endElement(); // end data field
-                    break;
+                    case "File_MARC_Data_Field":
+                        $this->marcxml->startElement("datafield");
+                        $this->marcxml->writeAttribute("tag", $field->getTag());
+                        $this->marcxml->writeAttribute("ind1", $field->getIndicator(1));
+                        $this->marcxml->writeAttribute("ind2", $field->getIndicator(2));
+                        foreach ($field->getSubfields() as $subfield) {
+                            $this->marcxml->startElement("subfield");
+                            $this->marcxml->writeAttribute("code", $subfield->getCode());
+                            $this->marcxml->text($subfield->getData());
+                            $this->marcxml->endElement(); // end subfield
+                        }
+                        $this->marcxml->endElement(); // end data field
+                        break;
                 }
             }
         }
@@ -682,4 +695,3 @@ class File_MARC_Record
 
 }
 // }}}
-
