@@ -38,7 +38,6 @@
  * @example   marc_yaz.php Pretty print a MARC record retrieved through the PECL yaz extension
  */
 
-require_once 'PEAR/Exception.php';
 require_once 'File/MARCBASE.php';
 require_once 'File/MARC.php';
 require_once 'File/MARC/Record.php';
@@ -153,23 +152,23 @@ class File_MARCXML extends File_MARCBASE
 
         switch ($type) {
 
-        case self::SOURCE_SIMPLEXMLELEMENT:
-            $this->type = self::SOURCE_SIMPLEXMLELEMENT;
-            $this->source = $source;
-            break;
+            case self::SOURCE_SIMPLEXMLELEMENT:
+                $this->type = self::SOURCE_SIMPLEXMLELEMENT;
+                $this->source = $source;
+                break;
 
-        case self::SOURCE_FILE:
-            $this->type = self::SOURCE_FILE;
-            $this->source = simplexml_load_file($source, "SimpleXMLElement", 0, $ns, $is_prefix);
-            break;
+            case self::SOURCE_FILE:
+                $this->type = self::SOURCE_FILE;
+                $this->source = simplexml_load_file($source, "SimpleXMLElement", 0, $ns, $is_prefix);
+                break;
 
-        case self::SOURCE_STRING:
-            $this->type = self::SOURCE_STRING;
-            $this->source = simplexml_load_string($source, "SimpleXMLElement", 0, $ns, $is_prefix);
-            break;
+            case self::SOURCE_STRING:
+                $this->type = self::SOURCE_STRING;
+                $this->source = simplexml_load_string($source, "SimpleXMLElement", 0, $ns, $is_prefix);
+                break;
 
-        default:
-            throw new File_MARC_Exception(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_SOURCE], File_MARC_Exception::ERROR_INVALID_SOURCE);
+            default:
+                throw new File_MARC_Exception(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_SOURCE], File_MARC_Exception::ERROR_INVALID_SOURCE);
         }
 
         if (!$this->source) {
@@ -250,7 +249,7 @@ class File_MARCXML extends File_MARCBASE
                 $subfieldattributes = $subfield->attributes();
                 $subfield_data[] = new File_MARC_Subfield((string)$subfieldattributes['code'], $subfield);
             }
-            
+
             // If the data is invalid, let's just ignore the one field
             try {
                 $new_field = new File_MARC_Data_Field((string)$datafieldattributes['tag'], $subfield_data, $datafieldattributes['ind1'], $datafieldattributes['ind2']);
@@ -266,4 +265,3 @@ class File_MARCXML extends File_MARCBASE
 
 }
 // }}}
-

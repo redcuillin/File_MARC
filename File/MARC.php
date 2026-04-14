@@ -39,7 +39,6 @@
  * @example   marc_yaz.php Pretty print a MARC record retrieved through the PECL yaz extension
  */
 
-require_once 'PEAR/Exception.php';
 require_once 'File/MARCBASE.php';
 require_once 'File/MARC/Record.php';
 require_once 'File/MARC/Field.php';
@@ -280,7 +279,15 @@ class File_MARC extends File_MARCBASE
         $marc->setLeader(substr($text, 0, File_MARC::LEADER_LEN));
 
         // bytes 12 - 16 of leader give offset to the body of the record
-        $data_start = 0 + substr($text, 12, 5);
+        $leaderAddrRaw = substr($text, 12, 5);
+        if (!ctype_digit((string) $leaderAddrRaw)) {
+            throw new File_MARC_Exception(
+                'Not ISO 2709 binary MARC: leader positions 12–16 must be five digits (base address of data). '
+                    . 'Paste MARCXML, or binary MARC with standard leader and directory (not MARCMaker line format).',
+                File_MARC_Exception::ERROR_NONNUMERIC_LENGTH,
+            );
+        }
+        $data_start = (int) $leaderAddrRaw;
 
         // immediately after the leader comes the directory (no separator)
         $dir = substr($text, File_MARC::LEADER_LEN, $data_start - File_MARC::LEADER_LEN - 1);  // -1 to allow for \x1e at end of directory
@@ -295,6 +302,8 @@ class File_MARC extends File_MARCBASE
             $marc->addWarning(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_DIRECTORY_LENGTH]);
         }
 
+        $record_length = (int) $record_length;
+
         // go through all the fields
         $nfields = strlen($dir) / File_MARC::DIRECTORY_ENTRY_LEN;
         for ($n = 0; $n < $nfields; $n++) {
@@ -302,32 +311,38 @@ class File_MARC extends File_MARCBASE
             $binaryString = substr($dir, $n * File_MARC::DIRECTORY_ENTRY_LEN, File_MARC::DIRECTORY_ENTRY_LEN);
 
             $tag = null;
-            $len = null;
-            $offset = null;
+            $lenStr = null;
+            $offsetStr = null;
 
             if (strlen($binaryString) >= File_MARC::DIRECTORY_ENTRY_LEN) {
                 list(, $tag) = unpack("A3", $binaryString);
-                list(, $len) = unpack("A3/A4", $binaryString);
-                list(, $offset) = unpack("A3/A4/A5", $binaryString);
+                list(, $lenStr) = unpack("A3/A4", $binaryString);
+                list(, $offsetStr) = unpack("A3/A4/A5", $binaryString);
             }
 
-            if (!is_numeric($len)) {
-                $len = 0;
+            if (!is_numeric((string) $lenStr)) {
+                $lenStr = '0';
             }
-            if (!is_numeric($offset)) {
-                $offset = 0;
+            if (!is_numeric((string) $offsetStr)) {
+                $offsetStr = '0';
             }
 
-            // Check directory validity
+            // Check directory validity using unpacked strings. Casting to int
+            // before validating fixed-width digits breaks on leading zeros
+            // (e.g. (int)"0011" === 11 fails a four-digit format check).
             if (!preg_match("/^[0-9A-Za-z]{3}$/", (string) $tag)) {
                 $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_DIRECTORY_TAG], array("tag" => $tag)));
             }
-            if (!preg_match("/^\d{4}$/", (string) $len)) {
-                $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_DIRECTORY_TAG_LENGTH], array("tag" => $tag, "len" => $len)));
+            if (!preg_match("/^\d{4}$/", (string) $lenStr)) {
+                $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_DIRECTORY_TAG_LENGTH], array("tag" => $tag, "len" => $lenStr)));
             }
-            if (!preg_match("/^\d{5}$/", (string) $offset)) {
-                $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_DIRECTORY_OFFSET], array("tag" => $tag, "offset" => $offset)));
+            if (!preg_match("/^\d{5}$/", (string) $offsetStr)) {
+                $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_DIRECTORY_OFFSET], array("tag" => $tag, "offset" => $offsetStr)));
             }
+
+            $len = (int) $lenStr;
+            $offset = (int) $offsetStr;
+
             if ($offset + $len > $record_length) {
                 $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_DIRECTORY], array("tag" => $tag)));
             }
@@ -337,7 +352,7 @@ class File_MARC extends File_MARCBASE
             if (substr($tag_data, -1, 1) == File_MARC::END_OF_FIELD) {
                 /* get rid of the end-of-tag character */
                 $tag_data = substr($tag_data, 0, -1);
-                $len--;
+                --$len;
             } else {
                 $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_FIELD_EOF], array("tag" => $tag)));
             }

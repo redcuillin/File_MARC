@@ -38,7 +38,6 @@
  * @example   marc_yaz.php Pretty print a MARC record retrieved through the PECL yaz extension
  */
 
-require_once 'PEAR/Exception.php';
 require_once 'File/MARCBASE.php';
 require_once 'File/MARC.php';
 require_once 'File/MARC/Record.php';
@@ -97,6 +96,13 @@ class File_MARCJSON extends File_MARCBASE
      * @var int
      */
     protected $counter;
+
+    /**
+     * Decoded MARC-in-JSON (consumed by {@see next()})
+     *
+     * @var object|null
+     */
+    protected $text;
 
     // }}}
 
@@ -208,7 +214,6 @@ class File_MARCJSON extends File_MARCBASE
                     }
                 }
             }
-
         }
         return $marc;
     }
@@ -216,4 +221,3 @@ class File_MARCJSON extends File_MARCBASE
 
 }
 // }}}
-

@@ -36,7 +36,7 @@
  * @link      http://pear.php.net/package/File_MARC
  */
 
-// {{{ class File_MARC_Exception extends PEAR_Exception
+// {{{ class File_MARC_Exception extends Exception
 /**
  * The File_MARC_Exception class enables error-handling
  * for the File_MARC package.
@@ -47,7 +47,7 @@
  * @license  http://www.gnu.org/copyleft/lesser.html  LGPL License 2.1
  * @link     http://pear.php.net/package/File_MARC
  */
-class File_MARC_Exception extends PEAR_Exception
+class File_MARC_Exception extends Exception
 {
     // {{{ Error codes
     /**
