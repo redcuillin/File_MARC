@@ -1,3 +1,6 @@
+Fork by redcuillin for PHP8.4 support
+-------------------------------------
+
 This package is http://pear.php.net/package/File_MARC and has been migrated from https://svn.php.net/repository/pear/packages/File_MARC
 
 Please report all new issues via the PEAR bug tracker.
