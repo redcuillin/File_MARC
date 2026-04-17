@@ -438,6 +438,10 @@ class File_MARC_Data_Field extends File_MARC_Field
         // Process tag and indicators
         $pre = sprintf("%3s %1s%1s", $this->tag, $this->ind1, $this->ind2);
 
+        if (!$this->subfields) {
+            return "";
+        }
+
         // Process subfields
         foreach ($this->subfields as $subfield) {
             $lines[] = sprintf("%6s _%1s%s", $pre, $subfield->getCode(), $subfield->getData());
@@ -459,6 +463,9 @@ class File_MARC_Data_Field extends File_MARC_Field
     function toRaw()
     {
         $subfields = array();
+        if (!$this->subfields) {
+            return (string)$this->ind1 . $this->ind2 . File_MARC::END_OF_FIELD;
+        }
         foreach ($this->subfields as $subfield) {
             if (!$subfield->isEmpty()) {
                 $subfields[] = $subfield->toRaw();
@@ -482,6 +489,9 @@ class File_MARC_Data_Field extends File_MARC_Field
     function getContents($joinChar = '')
     {
         $contents = array();
+        if (!$this->subfields) {
+            return "";
+        }
         foreach ($this->subfields as $subfield) {
             $contents[] = $subfield->getData();
         }
