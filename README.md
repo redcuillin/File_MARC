@@ -6,6 +6,22 @@ Initial objective is to replace the large number of deprecation warnings likely 
 Fork by redcuillin for PHP8.4 support
 -------------------------------------
 
+### Using this fork with Composer
+
+Add the following to your `composer.json` `repositories` and `require` sections (merge with existing entries as needed):
+
+```json
+"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/redcuillin/File_MARC"
+    }
+],
+"require": {
+    "pear/file_marc": "dev-master as 1.999.0"
+}
+```
+
 ## Upstream readme:
 
 This package is http://pear.php.net/package/File_MARC and has been migrated from https://svn.php.net/repository/pear/packages/File_MARC
